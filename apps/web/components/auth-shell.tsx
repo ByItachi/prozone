@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -18,6 +19,79 @@ export function AuthShell({
   tabs = false,
   activeTab = 'signin',
   wide = false,
+  footer,
+  notice,
+  children,
+}: {
+  title?: string;
+  tabs?: boolean;
+  activeTab?: 'signin' | 'signup';
+  wide?: boolean;
+  footer?: React.ReactNode;
+  notice?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <AuthShellSuspense
+      title={title}
+      tabs={tabs}
+      activeTab={activeTab}
+      wide={wide}
+      footer={footer}
+      notice={notice}
+    >
+      {children}
+    </AuthShellSuspense>
+  );
+}
+
+function AuthShellSuspense({
+  title,
+  tabs,
+  activeTab,
+  wide,
+  footer,
+  notice,
+  children,
+}: {
+  title?: string;
+  tabs?: boolean;
+  activeTab?: 'signin' | 'signup';
+  wide?: boolean;
+  footer?: React.ReactNode;
+  notice?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#0b151e]">
+          <svg className="h-8 w-8 animate-spin text-[#ed5d15]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="#ed5d15" strokeOpacity="0.25" strokeWidth="4" />
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="#ed5d15" strokeWidth="4" strokeLinecap="round" />
+          </svg>
+        </div>
+      }
+    >
+      <AuthShellInner
+        title={title}
+        tabs={tabs}
+        activeTab={activeTab}
+        wide={wide}
+        footer={footer}
+        notice={notice}
+      >
+        {children}
+      </AuthShellInner>
+    </Suspense>
+  );
+}
+
+function AuthShellInner({
+  title,
+  tabs,
+  activeTab,
+  wide,
   footer,
   notice,
   children,

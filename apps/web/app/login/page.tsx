@@ -34,9 +34,9 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <AuthShell title="Loading...">
-          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#ed5d15]" /></div>
-        </AuthShell>
+        <div className="flex min-h-screen items-center justify-center bg-[#0b151e]">
+          <Loader2 className="h-8 w-8 animate-spin text-[#ed5d15]" />
+        </div>
       }
     >
       <LoginPageInner />
