@@ -1,0 +1,892 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───
+
+enum RoleName {
+  SUPER_ADMIN
+  ADMIN
+  SUPPORT
+  FINANCE
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  PENDING
+}
+
+enum ServiceStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  CANCELLED
+  EXPIRED
+}
+
+enum OrderStatus {
+  PENDING
+  PAYMENT_PENDING
+  PAID
+  PROCESSING
+  ACTIVE
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  wallet
+  balance
+  stripe
+  paypal
+  iyzico
+  paytr
+  crypto
+  mock
+  manual
+}
+
+enum TransactionType {
+  DEPOSIT
+  PURCHASE
+  REFUND
+  WITHDRAW
+  ADJUSTMENT
+}
+
+enum BillingCycle {
+  monthly
+  yearly
+  one_time
+}
+
+enum InvoiceStatus {
+  PAID
+  UNPAID
+  OVERDUE
+  CANCELLED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum NotificationType {
+  ORDER_CREATED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  SERVICE_ACTIVATED
+  SERVICE_EXPIRING
+  SERVICE_SUSPENDED
+  TICKET_RESPONSE
+  SECURITY_ALERT
+  WALLET
+  ANNOUNCEMENT
+  SYSTEM
+}
+
+enum AuditAction {
+  USER_LOGIN
+  USER_LOGOUT
+  USER_CREATED
+  USER_UPDATED
+  PASSWORD_CHANGED
+  EMAIL_VERIFIED
+  TWO_FA_ENABLED
+  TWO_FA_DISABLED
+  USER_SUSPENDED
+  USER_BANNED
+  USER_UNBANNED
+  ORDER_CREATED
+  ORDER_CANCELLED
+  PAYMENT_COMPLETED
+  PAYMENT_FAILED
+  REFUND_CREATED
+  SERVICE_ACTIVATED
+  SERVICE_SUSPENDED
+  SERVICE_CANCELLED
+  WALLET_ADJUSTED
+  INVOICE_ISSUED
+  TICKET_CREATED
+  TICKET_STATUS_CHANGED
+  SETTINGS_CHANGED
+  PRODUCT_CREATED
+  PRODUCT_UPDATED
+  PRODUCT_DELETED
+  ADMIN_ACTION
+  EMAIL_SENT
+  PASSWORD_RESET
+  LOGIN_FAILED
+  ADMIN_CREATED
+  ROLE_CREATED
+  ROLE_UPDATED
+  PERMISSION_ASSIGNED
+  ROLE_ASSIGNED
+  SESSION_REVOKED
+  ACCESS_LINK_CREATED
+  ACCESS_LINK_REVOKED
+  ACCESS_LINK_RESTORED
+  ACCESS_ASSIGNED
+  ACCESS_ASSIGNMENT_REVOKED
+  ACCESS_TOKEN_CREATED
+  ACCESS_TOKEN_REVOKED
+  ACCESS_TOKEN_ROTATED
+  ACCESS_CODE_CREATED
+  ACCESS_CODE_REVOKED
+  ACCESS_CODE_REDEEMED
+  MD5_LOOKUP
+  MD5_IMPORT
+  ADMIN_NOTE_CREATED
+  ADMIN_NOTE_DELETED
+  EMAIL_TEMPLATE_UPDATED
+  PAGE_UPDATED
+  HELP_UPDATED
+  EXPORT_RAN
+  TICKET_UPDATED
+  ANNOUNCEMENT_CREATED
+  ANNOUNCEMENT_DELETED
+  ACCESS_ASSIGNMENT
+}
+
+// ─── Tables ───
+
+model Role {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        RoleName      @unique
+  description String?       @db.VarChar(300)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  permissions RolePermission[]
+  users       User[]
+}
+
+model Permission {
+  id          String        @id @default(uuid()) @db.Uuid
+  key         String        @unique @db.VarChar(100)
+  description String?       @db.VarChar(300)
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String     @db.Uuid
+  permissionId String     @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model User {
+  id                  String          @id @default(uuid()) @db.Uuid
+  name                String          @db.VarChar(60)
+  surname             String          @db.VarChar(60)
+  username            String          @unique @db.VarChar(30)
+  email               String          @unique @db.VarChar(150)
+  emailVerified       Boolean         @default(false)
+  phone               String?         @db.VarChar(30)
+  passwordHash        String          @db.VarChar(255)
+  roleId              String          @default("a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1") @db.Uuid
+  role                Role            @relation(fields: [roleId], references: [id])
+  status              UserStatus      @default(ACTIVE)
+  avatarUrl           String?         @db.VarChar(500)
+  language            String          @default("tr") @db.VarChar(10)
+  timezone            String          @default("Europe/Istanbul") @db.VarChar(60)
+  notificationEmail   Boolean         @default(true)
+  notificationWeb     Boolean         @default(true)
+  lastLoginAt         DateTime?
+  lastLoginIp         String?         @db.VarChar(45)
+  failedLoginCount    Int             @default(0)
+  lockedUntil         DateTime?
+  twoFactorEnabled    Boolean         @default(false)
+  twoFactorVerifiedAt DateTime?
+  deletedAt           DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  sessions      Session[]
+  twoFactor     TwoFactor?
+  wallet        Wallet?
+  services      Service[]
+  orders        Order[]
+  payments      Payment[]
+  tickets       Ticket[]          @relation("UserTickets")
+  assignedTickets Ticket[]        @relation("AssignedTickets")
+  notifications Notification[]
+  invoices      Invoice[]
+  auditLogs     AuditLog[]        @relation("UserAuditLogs")
+  adminAuditLogs AuditLog[]       @relation("AdminAuditLogs")
+  emailTokens   EmailToken[]
+  loginAttempts LoginAttempt[]
+  couponUsages  CouponUsage[]
+  ticketMessages TicketMessage[]
+  announcements Announcement[]
+  walletTx      WalletTransaction[] // relation to WalletTransaction.user
+  trafficEvents TrafficEvent[]
+  accessAssignments UserAccessAssignment[]
+  createdAccessLinks AccessLink[] @relation("AccessLinkCreator")
+  revokedAccessLinks AccessLink[] @relation("AccessLinkRevoker")
+  accessAssignmentsCreated UserAccessAssignment[] @relation("AccessAssigner")
+  accessTokens AccessToken[]
+  createdTokens AccessToken[] @relation("TokenCreator")
+  revokedTokens AccessToken[] @relation("TokenRevoker")
+  accessCodes AccessCode[] @relation("AccessCodeCreator")
+  accessCodeFor AccessCode[] @relation("AccessCodeUser")
+  adminNotesWritten AdminNote[] @relation("NoteAuthor")
+  adminNotesReceived AdminNote[] @relation("NotedUser")
+  quickReplies  QuickReply[] @relation("QuickReplyAuthor")
+  pagesEdited   Page[] @relation("PageEditor")
+  ticketEvents  TicketEvent[]
+
+  @@index([email])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+model Session {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken  String   @unique @db.VarChar(500)
+  tokenFamily   String   @db.VarChar(100)
+  userAgent     String?  @db.VarChar(500)
+  ip            String?  @db.VarChar(45)
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  rotatedFrom   String?  @db.Uuid
+  lastUsedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model TwoFactor {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @unique @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secret     String   @db.VarChar(255)
+  backupCodes String  @db.Text
+  enabled    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model EmailToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique @db.VarChar(255)
+  type      String    @db.VarChar(30) // VERIFY_EMAIL | PASSWORD_RESET
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, type])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String?   @db.Uuid
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email     String    @db.VarChar(150)
+  ip        String?   @db.VarChar(45)
+  userAgent String?   @db.VarChar(500)
+  success   Boolean
+  reason    String?   @db.VarChar(100)
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@index([ip])
+  @@index([createdAt])
+}
+
+model Wallet {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance   Decimal  @default(0) @db.Decimal(18, 4)
+  currency  String   @default("USD") @db.VarChar(3)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id          String          @id @default(uuid()) @db.Uuid
+  walletId    String          @db.Uuid
+  wallet      Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  userId      String          @db.Uuid
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        TransactionType
+  amount      Decimal         @db.Decimal(18, 4)
+  balanceAfter Decimal        @db.Decimal(18, 4)
+  referenceType  String?      @db.VarChar(30)
+  referenceId    String?      @db.Uuid
+  paymentId      String?      @db.Uuid
+  payment        Payment?     @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  description    String?      @db.VarChar(500)
+  metadata       Json?
+  createdAt   DateTime        @default(now())
+
+  @@index([walletId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Product {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(100)
+  slug        String   @unique @db.VarChar(100)
+  description String   @db.Text
+  category    String   @db.VarChar(60)
+  price       Decimal  @default(0) @db.Decimal(18, 4)
+  setupFee    Decimal  @default(0) @db.Decimal(18, 4)
+  currency    String   @default("USD") @db.VarChar(3)
+  features    Json     @default("[]")
+  limits      Json     @default("{}")
+  metadata    Json     @default("{}")
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  prices    ProductPrice[]
+  orders    OrderItem[]
+  services  Service[]
+
+  @@index([category])
+  @@index([active])
+}
+
+model ProductPrice {
+  id          String       @id @default(uuid()) @db.Uuid
+  productId   String       @db.Uuid
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cycle       BillingCycle
+  amount      Decimal      @db.Decimal(18, 4)
+  currency    String       @default("USD") @db.VarChar(3)
+  createdAt   DateTime     @default(now())
+
+  @@unique([productId, cycle])
+}
+
+model Service {
+  id            String        @id @default(uuid()) @db.Uuid
+  userId        String        @db.Uuid
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId     String?       @db.Uuid
+  product       Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name          String        @db.VarChar(120)
+  description   String?       @db.Text
+  category      String        @db.VarChar(60)
+  status        ServiceStatus @default(PENDING)
+  price         Decimal       @db.Decimal(18, 4)
+  currency      String        @default("USD") @db.VarChar(3)
+  billingCycle  BillingCycle  @default(monthly)
+  configuration Json          @default("{}")
+  metadata      Json          @default("{}")
+  usage         Json          @default("{}")
+  startedAt     DateTime?
+  renewalDate   DateTime?
+  expiresAt     DateTime?
+  cancelledAt   DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  order   Order?  @relation(fields: [orderId], references: [id])
+  orderId String? @unique @db.Uuid
+
+  @@index([userId, status])
+  @@index([status])
+  @@index([renewalDate])
+}
+
+model Order {
+  id          String      @id @default(uuid()) @db.Uuid
+  userId      String      @db.Uuid
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderNumber String      @unique
+  status      OrderStatus @default(PENDING)
+  subtotal    Decimal     @default(0) @db.Decimal(18, 4)
+  discount    Decimal     @default(0) @db.Decimal(18, 4)
+  total       Decimal     @default(0) @db.Decimal(18, 4)
+  currency    String      @default("USD") @db.VarChar(3)
+  billingCycle BillingCycle @default(monthly)
+  couponId    String?     @db.Uuid
+  coupon      Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  configuration Json      @default("{}")
+  cancelledReason String? @db.VarChar(500)
+  paidAt      DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  items     OrderItem[]
+  payments  Payment[]
+  services  Service[]
+  invoice   Invoice?
+
+  @@index([userId, status])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @db.Uuid
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String   @db.Uuid
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  name      String   @db.VarChar(120)
+  quantity  Int      @default(1)
+  unitPrice Decimal  @db.Decimal(18, 4)
+  config    Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model Payment {
+  id            String          @id @default(uuid()) @db.Uuid
+  userId        String          @db.Uuid
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId       String?         @db.Uuid
+  order         Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  provider      PaymentProvider
+  providerRef   String?         @db.VarChar(255)
+  amount        Decimal         @db.Decimal(18, 4)
+  currency      String          @default("USD") @db.VarChar(3)
+  status        PaymentStatus   @default(PENDING)
+  description   String?         @db.VarChar(500)
+  metadata      Json            @default("{}")
+  idempotencyKey String?        @unique @db.VarChar(150)
+  paidAt        DateTime?
+  refundedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  transactions WalletTransaction[]
+
+  @@index([userId, status])
+  @@index([orderId])
+  @@index([provider])
+}
+
+model Invoice {
+  id         String       @id @default(uuid()) @db.Uuid
+  invoiceNumber String    @unique
+  userId     String       @db.Uuid
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId    String?      @unique @db.Uuid
+  order      Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  subtotal   Decimal      @db.Decimal(18, 4)
+  tax        Decimal      @default(0) @db.Decimal(18, 4)
+  discount   Decimal      @default(0) @db.Decimal(18, 4)
+  total      Decimal      @db.Decimal(18, 4)
+  currency   String       @default("USD") @db.VarChar(3)
+  status     InvoiceStatus @default(UNPAID)
+  issueDate  DateTime     @default(now())
+  dueDate    DateTime
+  paidAt     DateTime?
+  pdfUrl     String?      @db.VarChar(500)
+  createdAt  DateTime     @default(now())
+
+  items InvoiceItem[]
+
+  @@index([userId, status])
+  @@index([dueDate])
+}
+
+model InvoiceItem {
+  id        String  @id @default(uuid()) @db.Uuid
+  invoiceId String  @db.Uuid
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  name      String  @db.VarChar(120)
+  quantity  Int     @default(1)
+  unitPrice Decimal @db.Decimal(18, 4)
+  createdAt DateTime @default(now())
+
+  @@index([invoiceId])
+}
+
+model Ticket {
+  id          String        @id @default(uuid()) @db.Uuid
+  ticketNumber String       @unique
+  userId      String        @db.Uuid
+  user        User          @relation("UserTickets", fields: [userId], references: [id], onDelete: Cascade)
+  assignedToId String?      @db.Uuid
+  assignedTo  User?         @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
+  subject     String        @db.VarChar(200)
+  category    String        @db.VarChar(60)
+  priority    TicketPriority @default(NORMAL)
+  status      TicketStatus  @default(OPEN)
+  lastMessageAt DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  messages TicketMessage[]
+  notifications Notification[]
+  events      TicketEvent[]
+
+  tags        String[] @default([])
+  slaDueAt    DateTime?
+  waitingSince DateTime?
+  firstReplyAt DateTime?
+  resolutionReason String? @db.VarChar(300)
+  mergedIntoId String? @db.Uuid
+
+  @@index([userId, status])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([priority])
+  @@index([category])
+}
+
+model TicketEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  ticketId  String   @db.Uuid
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actorId   String?  @db.Uuid
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  kind      String   @db.VarChar(40)
+  fromValue String?  @db.VarChar(60)
+  toValue   String?  @db.VarChar(60)
+  note      String?  @db.VarChar(300)
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model TicketMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  ticketId  String   @db.Uuid
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderId  String   @db.Uuid
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body      String   @db.Text
+  isInternal Boolean @default(false)
+  attachments Json   @default("[]")
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String           @db.VarChar(200)
+  body      String           @db.Text
+  link      String?          @db.VarChar(500)
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  metadata  Json             @default("{}")
+  createdAt DateTime         @default(now())
+
+  ticketId String? @db.Uuid
+  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+model Announcement {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String    @db.VarChar(150)
+  content     String    @db.Text
+  type        String    @default("INFO") @db.VarChar(20)
+  priority    String    @default("NORMAL") @db.VarChar(20)
+  active      Boolean   @default(true)
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  createdById String    @db.Uuid
+  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([active])
+}
+
+model Coupon {
+  id              String         @id @default(uuid()) @db.Uuid
+  code            String         @unique @db.VarChar(30)
+  discountPercent Decimal        @default(0) @db.Decimal(5, 2)
+  discountAmount  Decimal        @default(0) @db.Decimal(18, 4)
+  maxUses         Int            @default(1)
+  usedCount       Int            @default(0)
+  expiresAt       DateTime?
+  active          Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  orders    Order[]
+  usages    CouponUsage[]
+
+  @@index([active])
+}
+
+model CouponUsage {
+  id        String   @id @default(uuid()) @db.Uuid
+  couponId  String   @db.Uuid
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId   String?  @db.Uuid
+  createdAt DateTime @default(now())
+
+  @@index([couponId])
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String     @id @default(uuid()) @db.Uuid
+  userId    String?    @db.Uuid
+  user      User?      @relation("UserAuditLogs", fields: [userId], references: [id], onDelete: SetNull)
+  actorId   String?    @db.Uuid
+  actor     User?      @relation("AdminAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  action    AuditAction
+  ip        String?    @db.VarChar(45)
+  userAgent String?    @db.VarChar(500)
+  target    String?    @db.VarChar(100)
+  targetId  String?    @db.Uuid
+  metadata  Json       @default("{}")
+  createdAt DateTime   @default(now())
+
+  @@index([userId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model SystemSetting {
+  id        String  @id @default(uuid()) @db.Uuid
+  key       String  @unique @db.VarChar(100)
+  value     String  @db.Text
+  type      String  @default("string") @db.VarChar(20)
+  isPublic  Boolean @default(false)
+  updatedAt DateTime @updatedAt
+}
+// ─── Admin platform extensions ───
+
+enum LinkKind {
+  CLEARNET
+  ONION
+  OTHER
+}
+
+model TrafficEvent {
+  id          String   @id @default(uuid()) @db.Uuid
+  kind        String   @db.VarChar(30)
+  userId      String?  @db.Uuid
+  country     String?  @db.VarChar(2)
+  countryCode String?  @db.VarChar(64)
+  reliability String   @db.VarChar(20)
+  ipMasked    String?  @db.VarChar(45)
+  path        String?  @db.VarChar(200)
+  method      String?  @db.VarChar(10)
+  status      Int?
+  ms          Int?
+  userAgent   String?  @db.VarChar(500)
+  deviceType  String?  @db.VarChar(20)
+  browser     String?  @db.VarChar(40)
+  os          String?  @db.VarChar(40)
+  metadata    Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([country, createdAt])
+  @@index([kind, createdAt])
+  @@index([userId, createdAt])
+}
+
+model AccessLink {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String    @db.VarChar(120)
+  url           String    @unique @db.VarChar(500)
+  kind          LinkKind  @default(CLEARNET)
+  description   String?   @db.VarChar(500)
+  active        Boolean   @default(true)
+  priority      Int       @default(100)
+  validFrom     DateTime?
+  validUntil    DateTime?
+  createdById   String?   @db.Uuid
+  createdBy     User?     @relation("AccessLinkCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  lastCheckedAt DateTime?
+  lastCheckOk   Boolean?
+  lastCheckCode Int?
+  revokedAt     DateTime?
+  revokedById   String?   @db.Uuid
+  revokedBy     User?     @relation("AccessLinkRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  assignments UserAccessAssignment[]
+
+  @@index([active])
+  @@index([kind])
+}
+
+model UserAccessAssignment {
+  id           String     @id @default(uuid()) @db.Uuid
+  linkId       String     @db.Uuid
+  link         AccessLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  userId       String     @db.Uuid
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdById  String?    @db.Uuid
+  createdBy    User?      @relation("AccessAssigner", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime   @default(now())
+
+  @@unique([linkId, userId])
+  @@index([userId])
+}
+
+model AccessToken {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @db.Uuid
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String    @db.VarChar(120)
+  tokenHash      String    @unique @db.VarChar(255)
+  prefix         String    @db.VarChar(12)
+  scope          String    @db.VarChar(30)
+  maxUses        Int?
+  uses           Int       @default(0)
+  lastUsedAt     DateTime?
+  lastFailureAt  DateTime?
+  failureCount   Int       @default(0)
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  revokedById    String?   @db.Uuid
+  revokedBy      User?     @relation("TokenRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+  createdById    String?   @db.Uuid
+  createdBy      User?     @relation("TokenCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt      DateTime  @default(now())
+
+  @@index([userId])
+  @@index([scope])
+}
+
+model AccessCode {
+  id           String    @id @default(uuid()) @db.Uuid
+  codeHash     String    @unique @db.VarChar(255)
+  prefix       String    @db.VarChar(10)
+  scope        String    @db.VarChar(120)
+  userId       String?   @db.Uuid
+  user         User?     @relation("AccessCodeUser", fields: [userId], references: [id], onDelete: Cascade)
+  singleUse    Boolean   @default(false)
+  maxUses      Int       @default(1)
+  uses         Int       @default(0)
+  expiresAt    DateTime?
+  usedAt       DateTime?
+  revokedAt    DateTime?
+  createdById  String?   @db.Uuid
+  createdBy    User?     @relation("AccessCodeCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Md5Record {
+  id        String   @id @default(uuid()) @db.Uuid
+  source    String   @db.VarChar(60)
+  valueMd5  String   @db.VarChar(32)
+  note      String?  @db.VarChar(300)
+  createdAt DateTime @default(now())
+
+  @@index([valueMd5])
+  @@index([source])
+}
+
+model AdminNote {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation("NotedUser", fields: [userId], references: [id], onDelete: Cascade)
+  authorId  String   @db.Uuid
+  author    User     @relation("NoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+model EmailTemplate {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique @db.VarChar(60)
+  subject   String   @db.VarChar(200)
+  body      String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+model TicketCategory {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(80)
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+}
+
+model QuickReply {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String   @db.VarChar(120)
+  body      String   @db.Text
+  createdById String? @db.Uuid
+  createdBy User?    @relation("QuickReplyAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+}
+
+model Page {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique @db.VarChar(120)
+  title     String   @db.VarChar(200)
+  content   String   @db.Text
+  navLabel  String?  @db.VarChar(80)
+  navOrder  Int      @default(0)
+  status    String   @default("DRAFT") @db.VarChar(20)
+  updatedBy String?  @db.Uuid
+  updatedByUser User? @relation("PageEditor", fields: [updatedBy], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HelpArticle {
+  id        String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique @db.VarChar(120)
+  title     String   @db.VarChar(200)
+  body      String   @db.Text
+  category  String   @default("general") @db.VarChar(60)
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

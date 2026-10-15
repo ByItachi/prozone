@@ -1,0 +1,37 @@
+{
+  "name": "novapanel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NovaPanel - Professional service management platform (monorepo)",
+  "packageManager": "pnpm@10.33.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "argon2",
+      "esbuild",
+      "msgpackr-extract",
+      "prisma",
+      "core-js",
+      "ws"
+    ]
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "dev:api": "pnpm --filter @novapanel/api dev",
+    "dev:web": "pnpm --filter @novapanel/web dev",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:generate": "pnpm --filter @novapanel/db generate",
+    "db:push": "pnpm --filter @novapanel/db db:push",
+    "db:seed": "pnpm --filter @novapanel/db db:seed",
+    "db:studio": "pnpm --filter @novapanel/db db:studio",
+    "docker:up": "docker compose -f infra/docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infra/docker/docker-compose.yml down"
+  }
+}

@@ -1,0 +1,41 @@
+import type { FastifyInstance } from 'fastify';
+import { authRoutes } from '../modules/auth/auth.routes.ts';
+import { userRoutes } from '../modules/users/users.routes.ts';
+import { productRoutes } from '../modules/products/products.routes.ts';
+import { serviceRoutes } from '../modules/services/services.routes.ts';
+import { orderRoutes } from '../modules/orders/orders.routes.ts';
+import { paymentRoutes } from '../modules/payments/payments.routes.ts';
+import { invoiceRoutes } from '../modules/invoices/invoices.routes.ts';
+import { ticketRoutes } from '../modules/tickets/tickets.routes.ts';
+import { notificationRoutes } from '../modules/notifications/notifications.routes.ts';
+import { walletRoutes } from '../modules/wallet/wallet.routes.ts';
+import { adminRoutes } from '../modules/admin/admin.routes.ts';
+import { registerLiveRoutes } from '../services/live.routes.ts';
+import { adminPlatformRoutes } from '../modules/admin/admin-platform.routes.ts';
+import { adminAccessRoutes, adminTokenRoutes, adminCodeRoutes, adminMd5Routes } from '../modules/admin/admin-access.routes.ts';
+import { adminSecurityRoutes } from '../modules/admin/admin-security.routes.ts';
+import { adminAnalyticsRoutes, adminContentRoutes, adminNotesRoutes } from '../modules/admin/admin-analytics.routes.ts';
+
+export async function registerRoutes(app: FastifyInstance) {
+  authRoutes(app);
+  userRoutes(app);
+  productRoutes(app);
+  serviceRoutes(app);
+  orderRoutes(app);
+  paymentRoutes(app);
+  invoiceRoutes(app);
+  ticketRoutes(app);
+  notificationRoutes(app);
+  walletRoutes(app);
+  adminRoutes(app);
+  await registerLiveRoutes(app);
+  adminPlatformRoutes(app);
+  adminAccessRoutes(app);
+  adminTokenRoutes(app);
+  adminCodeRoutes(app);
+  adminMd5Routes(app);
+  adminSecurityRoutes(app);
+  adminAnalyticsRoutes(app);
+  adminContentRoutes(app);
+  adminNotesRoutes(app);
+}
