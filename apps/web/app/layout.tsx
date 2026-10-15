@@ -20,10 +20,13 @@ const lato = Lato({
 
 export const metadata: Metadata = {
   title: {
-    default: 'NovaPanel — Digital Services Marketplace',
-    template: '%s · NovaPanel',
+    default: 'Prozone',
+    template: '%s · Prozone',
   },
   description: 'A secure panel where you can buy data, accounts and digital services.',
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

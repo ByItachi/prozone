@@ -21,7 +21,7 @@ export function Navbar({ transparent = false }: { transparent?: boolean }) {
         <Link href="/" className="flex items-center">
           <Image
             src="/logo_b_1.png"
-            alt="NovaPanel"
+            alt="Prozone"
             width={149}
             height={32}
             priority
@@ -29,7 +29,7 @@ export function Navbar({ transparent = false }: { transparent?: boolean }) {
           />
           <Image
             src="/logo_b_2.png"
-            alt="NovaPanel"
+            alt="Prozone"
             width={149}
             height={32}
             priority

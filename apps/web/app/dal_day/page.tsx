@@ -100,7 +100,7 @@ export default function DirectAccessPage() {
               {/* .direct__logo */}
               <Image
                 src={dark ? '/direct-logo-l.svg' : '/direct-logo-d.svg'}
-                alt="NovaPanel"
+                alt="Prozone"
                 width={327}
                 height={70}
                 priority

@@ -186,7 +186,7 @@ function AuthShellInner({
               <Link href="/" className="flex items-center">
                 <Image
                   src={dark ? '/logo_b_2.png' : '/logo_b_1.png'}
-                  alt="NovaPanel"
+                  alt="Prozone"
                   width={223}
                   height={48}
                   priority
@@ -278,7 +278,7 @@ function AuthShellInner({
                   <Play className="h-[18px] w-[18px] fill-white text-white" />
                 </span>
                 <span className="font-display text-[24px] font-normal leading-none">Video instruction</span>
-                <span className="font-display text-[24px] font-bold leading-none">How to register on NovaPanel</span>
+                <span className="font-display text-[24px] font-bold leading-none">How to register on Prozone</span>
               </div>
             </div>
           </div>

@@ -144,7 +144,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <Link href="/" className="header2__logo">
             <Image
               src="/header2/header_logo2.png"
-              alt="NovaPanel"
+              alt="Prozone"
               width={160}
               height={35}
               priority
