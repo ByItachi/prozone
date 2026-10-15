@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
@@ -9,6 +9,20 @@ import { AuthShell } from '@/components/auth-shell';
 import { Button } from '@/components/ui/button';
 
 export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthShell title="Loading...">
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#ed5d15]" /></div>
+        </AuthShell>
+      }
+    >
+      <VerifyEmailInner />
+    </Suspense>
+  );
+}
+
+function VerifyEmailInner() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? '';
 

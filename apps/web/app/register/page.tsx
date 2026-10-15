@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -85,6 +85,20 @@ function SignupNotice() {
 }
 
 export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthShell title="Loading...">
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#ed5d15]" /></div>
+        </AuthShell>
+      }
+    >
+      <RegisterPageInner />
+    </Suspense>
+  );
+}
+
+function RegisterPageInner() {
   const { register } = useAuth();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') ?? '/';

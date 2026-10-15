@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -31,6 +31,20 @@ const MdsIcon = () => <AssetIcon src="/main_f_lock-d2.7eeb585.svg" />;
 const UserIcon = () => <AssetIcon src="/indir.svg" />;
 
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthShell title="Loading...">
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#ed5d15]" /></div>
+        </AuthShell>
+      }
+    >
+      <LoginPageInner />
+    </Suspense>
+  );
+}
+
+function LoginPageInner() {
   const router = useRouter();
   const { refreshUser } = useAuth();
   const searchParams = useSearchParams();
