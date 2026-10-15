@@ -1,7 +1,13 @@
 import { config as loadEnv } from 'dotenv';
 import { z } from 'zod';
 
-loadEnv({ path: new URL('../../../.env', import.meta.url) });
+try {
+  loadEnv({ path: new URL('../../../.env', import.meta.url) });
+} catch {
+  // import.meta.url is unavailable in some bundled (CJS) builds; fall back to
+  // dotenv's default resolution (process.cwd()) / already-injected process.env.
+  loadEnv();
+}
 
 const boolFromString = z
   .enum(['true', 'false', '1', '0'])
