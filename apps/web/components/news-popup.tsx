@@ -34,22 +34,20 @@ export function NewsPopup() {
           news <hr /> ⚠️ NEW TELEGRAM GROUP ⚠️
         </div>
         <div className="popup__block popup__block-center">
-          <p>
-            <h1>
-              <a href="https://t.me/+OKpO3b2M5nxlN2Zk" target="_blank" rel="noopener noreferrer">
-                <strong>
-                  <em>CLICK HERE FOR NEW TELEGRAM GROUP</em>
-                </strong>
-              </a>
+          <h1>
+            <a href="https://t.me/+OKpO3b2M5nxlN2Zk" target="_blank" rel="noopener noreferrer">
               <strong>
-                <em>
-                  <br />
-                  <br />
-                  ✔️ Old group has been blocked .
-                </em>
+                <em>CLICK HERE FOR NEW TELEGRAM GROUP</em>
               </strong>
-            </h1>
-          </p>
+            </a>
+            <strong>
+              <em>
+                <br />
+                <br />
+                ✔️ Old group has been blocked .
+              </em>
+            </strong>
+          </h1>
         </div>
         <div className="popup__block flex jcc">
           <a href="#" className="sitebutton maxwidth300 orange" onClick={(e) => { e.preventDefault(); dismiss(); }}>

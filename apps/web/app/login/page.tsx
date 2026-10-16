@@ -139,20 +139,6 @@ function LoginPageInner() {
         </div>
       )}
 
-      {!require2FA && (
-        <button
-          type="button"
-          onClick={() => {
-            setIdentifier('prozonetest2');
-            setPassword('ProzoneTest123!');
-          }}
-          className="mb-5 w-full rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2.5 text-left text-xs text-slate-600 hover:bg-slate-100"
-        >
-          <span className="font-semibold text-slate-700">Test hesabı:</span> prozonetest2 /
-          ProzoneTest123! <span className="text-slate-400">(doldurmak için tıkla)</span>
-        </button>
-      )}
-
       {require2FA ? (
         <form onSubmit={handle2FA} className="space-y-[20px]">
           <AuthField
