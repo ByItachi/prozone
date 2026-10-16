@@ -109,7 +109,7 @@ export default function DirectAccessPage() {
 
               {/* .direct__title */}
               <h1 className="mt-[50px] font-display text-[40px] font-normal leading-[40px] md:mt-[80px] md:text-[70px] md:leading-[70px]">
-                FOR FEW HOURS NOVAPANEL WILL WORK ONLY THROUGH{' '}
+                FOR FEW HOURS PROZONE WILL WORK ONLY THROUGH{' '}
                 <span className="text-[#ed5d15]">DIRECT ACCESS LINK</span>
               </h1>
 

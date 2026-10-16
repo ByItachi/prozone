@@ -89,6 +89,9 @@ export interface Wallet {
   id: string;
   balance: number;
   currency: string;
+  totalDeposited: number;
+  minDeposit: number;
+  unlocked: boolean;
 }
 
 export interface WalletTransaction {

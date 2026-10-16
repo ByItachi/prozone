@@ -179,7 +179,7 @@ async function seed() {
   }
 
   const settings = [
-    { key: 'site.name', value: 'NovaPanel', type: 'string', isPublic: true },
+    { key: 'site.name', value: 'Prozone', type: 'string', isPublic: true },
     { key: 'site.currency', value: 'USD', type: 'string', isPublic: true },
     { key: 'site.maintenance', value: 'false', type: 'boolean', isPublic: true },
     { key: 'registration.enabled', value: 'true', type: 'boolean', isPublic: false },
@@ -196,7 +196,7 @@ async function seed() {
 
   const passwordHash = await argon2.hash('Admin1234!');
 
-  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@novapanel.dev';
+  const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@prozone.st';
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {},

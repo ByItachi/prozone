@@ -19,7 +19,7 @@ export const envSchema = z.object({
   PORT: z.coerce.number().default(4000),
   API_URL: z.string().url().default('http://localhost:4000'),
   WEB_URL: z.string().url().default('http://localhost:3000'),
-  APP_NAME: z.string().default('NovaPanel'),
+  APP_NAME: z.string().default('Prozone'),
 
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().default('redis://localhost:6379'),
@@ -28,8 +28,8 @@ export const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
-  JWT_ISSUER: z.string().default('NovaPanel'),
-  JWT_AUDIENCE: z.string().default('NovaPanel-web'),
+  JWT_ISSUER: z.string().default('Prozone'),
+  JWT_AUDIENCE: z.string().default('Prozone-web'),
 
   ARGON2_MEMORY_COST: z.coerce.number().default(19456),
   ARGON2_TIME_COST: z.coerce.number().default(2),
@@ -44,7 +44,7 @@ export const envSchema = z.object({
   SMTP_USER: z.string().default(''),
   SMTP_PASSWORD: z.string().default(''),
   SMTP_SECURE: boolFromString,
-  SMTP_FROM: z.string().default('NovaPanel <noreply@novapanel.dev>'),
+  SMTP_FROM: z.string().default('Prozone <noreply@prozone.st>'),
 
   STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
   STORAGE_LOCAL_PATH: z.string().default('./uploads'),
@@ -61,9 +61,11 @@ export const envSchema = z.object({
   PAYTR_WEBHOOK_SECRET: z.string().default(''),
   PAYMENT_METHODS: z.string().default('wallet,mock'),
 
+  ACCESS_MIN_DEPOSIT: z.coerce.number().default(100),
+
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
 
-  ADMIN_EMAIL: z.string().email().default('admin@novapanel.dev'),
+  ADMIN_EMAIL: z.string().email().default('admin@prozone.st'),
   ADMIN_PASSWORD: z.string().min(8).default('Admin1234!'),
   SEED_ON_START: boolFromString,
 

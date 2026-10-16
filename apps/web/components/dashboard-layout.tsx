@@ -5,10 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { formatMoney } from '@/lib/format';
+import { isLockedSlug, isStaffRole, pathSlug } from '@/lib/access';
 import { cn } from '@/lib/utils';
 import type { Wallet as WalletType } from '@/lib/types';
 import { NewsPopup } from '@/components/news-popup';
@@ -73,6 +74,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   });
 
   const balance = formatMoney(wallet?.balance ?? 0, wallet?.currency ?? 'USD');
+  const unlocked = isStaffRole(user?.role) || wallet?.unlocked === true;
 
   useEffect(() => {
     try {
@@ -117,6 +119,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       router.replace('/login?next=/');
     }
   }, [loading, user, router]);
+
+  // Deposit gate: query screens stay locked until the cumulative top-up threshold is met.
+  useEffect(() => {
+    if (loading || !user || !wallet) return;
+    if (!unlocked && isLockedSlug(pathSlug(pathname))) {
+      router.replace('/wallet?locked=1');
+    }
+  }, [loading, user, wallet, unlocked, pathname, router]);
 
   if (loading) {
     return (
@@ -312,11 +322,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   const active = item.exact
                     ? pathname === item.href
                     : pathname.startsWith(item.href);
+                  const locked = !unlocked && isLockedSlug(item.href.slice(1));
                   return (
-                    <li key={item.href} className={cn(active && 'active')}>
+                    <li key={item.href} className={cn(active && 'active', locked && 'locked')}>
                       <Link href={item.href} onClick={() => setSidebarOpen(false)}>
                         <Image src={item.icon} alt="" width={20} height={20} className="h-5 w-5 shrink-0" />
                         <span>{item.label}</span>
+                        {locked && <Lock className="ml-auto h-3.5 w-3.5 shrink-0 text-[#ed5d15]" />}
                       </Link>
                     </li>
                   );

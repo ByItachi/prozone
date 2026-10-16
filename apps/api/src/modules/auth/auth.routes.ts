@@ -20,7 +20,7 @@ const changePasswordSchema = z
 
 export function authRoutes(app: FastifyInstance) {
   app.post('/api/auth/register', { config: { rateLimit: { max: 5, timeWindow: '1 minute' } } }, async (request, reply) => {
-    const result = await authService.register(app, request, request.body);
+    const result = await authService.register(app, request, request.body, reply);
     return reply.code(201).send({ success: true, message: 'Hesap oluşturuldu', data: result });
   });
 

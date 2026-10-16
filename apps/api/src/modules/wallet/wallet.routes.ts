@@ -5,6 +5,7 @@ import { authed } from '../../utils/guards.ts';
 import { AppError } from '../../utils/errors.ts';
 import { walletService } from './wallet.service.ts';
 import { getRedis } from '../../services/redis.service.ts';
+import { resolveAccess } from '../../utils/access.ts';
 
 const DEFAULT_RATES: Record<string, number> = { BTC: 67000, LTC: 80, USDT: 1 };
 
@@ -56,11 +57,21 @@ export function walletRoutes(app: FastifyInstance) {
   const guard = authed(app);
 
   app.get('/api/wallet', { preHandler: guard }, async (request, reply) => {
-    const wallet = await walletService.getOrCreate(request.user!.id);
+    const [wallet, access] = await Promise.all([
+      walletService.getOrCreate(request.user!.id),
+      resolveAccess(request.user!.id),
+    ]);
     return reply.send({
       success: true,
       message: 'Cüzdan',
-      data: { id: wallet.id, balance: Number(wallet.balance), currency: wallet.currency },
+      data: {
+        id: wallet.id,
+        balance: Number(wallet.balance),
+        currency: wallet.currency,
+        totalDeposited: access.totalDeposited,
+        minDeposit: access.minDeposit,
+        unlocked: access.unlocked,
+      },
     });
   });
 

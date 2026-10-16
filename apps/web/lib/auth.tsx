@@ -97,15 +97,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify(input),
         });
         setUser(data.user);
-        router.push('/');
-        router.refresh();
+        // Navigation is handled by the register page (deposit notice popup first).
         return data.user;
       } catch (err) {
         setError(getErrorMessage(err));
         throw err;
       }
     },
-    [router],
+    [],
   );
 
   const logout = useCallback(async () => {

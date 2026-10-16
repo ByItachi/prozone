@@ -3,13 +3,14 @@
 import { Suspense, useCallback, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { getErrorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { AuthShell, useAuthTheme } from '@/components/auth-shell';
 import { AuthField } from '@/components/auth-field';
 import { CaptchaField } from '@/components/captcha-field';
+import { DepositNoticeModal } from '@/components/deposit-notice';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -100,6 +101,7 @@ export default function RegisterPage() {
 
 function RegisterPageInner() {
   const { register } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') ?? '/';
 
@@ -125,7 +127,7 @@ function RegisterPageInner() {
           name: username,
           surname: username,
           username,
-          email: `${username}@novapanel.local`,
+          email: `${username}@prozone.local`,
           password,
           passwordConfirmation,
           terms: true,
@@ -158,15 +160,22 @@ function RegisterPageInner() {
       }
     >
       {done ? (
-        <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <CheckCircle2 className="h-12 w-12 text-emerald-600" />
-          <h2 className="auth-heading text-xl font-bold">Your account has been created!</h2>
-          <Link href="/" className="mt-2 w-full">
-            <Button className="sitebutton block h-[60px] w-full rounded-[5px] bg-[#ed5d15] font-display text-2xl uppercase tracking-[1.5px] hover:bg-[#d85311]">
-              Go to Panel
-            </Button>
-          </Link>
-        </div>
+        <>
+          <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <CheckCircle2 className="h-12 w-12 text-emerald-600" />
+            <h2 className="auth-heading text-xl font-bold">Your account has been created!</h2>
+            <Link href="/" className="mt-2 w-full">
+              <Button className="sitebutton block h-[60px] w-full rounded-[5px] bg-[#ed5d15] font-display text-2xl uppercase tracking-[1.5px] hover:bg-[#d85311]">
+                Go to Panel
+              </Button>
+            </Link>
+          </div>
+          <DepositNoticeModal
+            open
+            onContinue={() => router.push('/wallet')}
+            onClose={() => router.push('/')}
+          />
+        </>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-[20px]">
           {error && (

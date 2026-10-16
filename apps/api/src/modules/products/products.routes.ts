@@ -1,8 +1,9 @@
 import { prisma } from '@novapanel/db';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { authed, permission } from '../../utils/guards.ts';
 import { auditFromRequest } from '../../utils/audit.ts';
+import { ACCESS_MIN_DEPOSIT, LOCKED_CATEGORIES, resolveAccess } from '../../utils/access.ts';
 
 const productSchema = z.object({
   name: z.string().trim().min(3).max(100),
@@ -39,7 +40,29 @@ export function productRoutes(app: FastifyInstance) {
   const guard = authed(app);
 
   // ─── Public catalog ───
-  app.get('/api/products', async (request, reply) => {
+  // Locked query categories require an authenticated, deposit-eligible user.
+  const depositGate = async (request: FastifyRequest, reply: FastifyReply) => {
+    const category = (request.query as { category?: string } | undefined)?.category;
+    if (!category || !LOCKED_CATEGORIES.includes(category)) return;
+    if (!request.user) {
+      try {
+        await app.authenticate(request, reply);
+      } catch {
+        return reply.code(401).send({ success: false, message: 'Giriş yapmanız gerekiyor', code: 'UNAUTHORIZED', data: null });
+      }
+    }
+    const access = await resolveAccess(request.user!.id);
+    if (!access.unlocked) {
+      return reply.code(403).send({
+        success: false,
+        message: `Sorgulama ekranları için minimum $${ACCESS_MIN_DEPOSIT} yükleme gerekli`,
+        code: 'DEPOSIT_REQUIRED',
+        data: access,
+      });
+    }
+  };
+
+  app.get('/api/products', { preHandler: depositGate }, async (request, reply) => {
     const q = z
       .object({ page: z.coerce.number().int().min(1).default(1), limit: z.coerce.number().int().min(1).max(50).default(24), category: z.string().optional() })
       .parse(request.query);

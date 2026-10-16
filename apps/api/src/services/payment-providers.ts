@@ -110,7 +110,7 @@ class StripeProvider implements PaymentProviderAdapter {
       body: new URLSearchParams({
         amount: String(Math.round(input.amount * 100)),
         currency: input.currency.toLowerCase(),
-        description: input.description ?? 'NovaPanel ödeme',
+        description: input.description ?? 'Prozone ödeme',
         metadata: JSON.stringify(input.metadata ?? {}),
         'automatic_payment_methods[enabled]': 'true',
       }),

@@ -183,7 +183,7 @@ async function recordFailedLogin(app: FastifyInstance, email: string, userId: st
 
 // ─── Public service object ───
 export const authService = {
-  async register(app: FastifyInstance, request: FastifyRequest, input: unknown) {
+  async register(app: FastifyInstance, request: FastifyRequest, input: unknown, reply: FastifyReply) {
     const data = registerSchema.parse(input);
     const existing = await prisma.user.findFirst({
       where: { OR: [{ email: data.email }, { username: data.username }] },
@@ -248,6 +248,9 @@ export const authService = {
       reliability: regGeo.reliability,
       liveMessage: `New registration: ${user.username}`,
     });
+
+    // Auto-login: issue session cookies so the new user lands authenticated.
+    await issueTokens(app, user.id, reply, getIp(request), getUserAgent(request), false);
 
     return { user: await toAuthUser(user.id) };
   },
@@ -525,7 +528,7 @@ export const authService = {
     const existing = await prisma.twoFactor.findUnique({ where: { userId } });
     if (existing?.enabled) throw new AppError('TWO_FA_ALREADY', '2FA zaten aktif', 400);
     const secret = authenticator.generateSecret();
-    const otpauth = authenticator.keyuri(userId + '@novapanel', app.env.APP_NAME, secret);
+    const otpauth = authenticator.keyuri(userId + '@prozone', app.env.APP_NAME, secret);
     const qr = await qrcode.toDataURL(otpauth);
     const backupCodes = generateBackupCodes();
     await prisma.twoFactor.upsert({

@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import type { Wallet } from '@/lib/types';
+import { DepositLockBanner } from '@/components/deposit-notice';
 
 type BillingDetails = {
   address: string | null;
@@ -80,6 +82,11 @@ export default function WalletPage() {
   const [couponCode, setCouponCode] = useState('');
   void user;
 
+  const { data: wallet } = useQuery({
+    queryKey: ['wallet'],
+    queryFn: () => api<Wallet>('/api/wallet'),
+  });
+
   const { data: billing } = useQuery({
     queryKey: ['wallet', 'billing'],
     queryFn: () => api<BillingDetails>('/api/wallet/billing'),
@@ -110,6 +117,7 @@ export default function WalletPage() {
   };
   return (
     <div className="content__block">
+      {wallet && wallet.unlocked === false && <DepositLockBanner minDeposit={wallet.minDeposit} />}
       <div className="row balance" style={{ gap: '25px 0' }}>
         {METHODS.map((m) => (
           <div className="col-md-3 col-xs-6" key={m.id}>
