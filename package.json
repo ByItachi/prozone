@@ -31,6 +31,10 @@
     "db:push": "pnpm --filter @novapanel/db db:push",
     "db:seed": "pnpm --filter @novapanel/db db:seed",
     "db:studio": "pnpm --filter @novapanel/db db:studio",
+    "security": "node scripts/security.mjs",
+    "secrets:scan": "node scripts/scan-secrets.mjs",
+    "secrets:scan:history": "node scripts/scan-secrets.mjs --history",
+    "secrets:rotate-jwt": "node scripts/rotate-jwt-secrets.mjs",
     "docker:up": "docker compose -f infra/docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f infra/docker/docker-compose.yml down"
   }

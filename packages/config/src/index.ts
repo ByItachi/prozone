@@ -66,7 +66,13 @@ export const envSchema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
 
   ADMIN_EMAIL: z.string().email().default('admin@prozone.st'),
-  ADMIN_PASSWORD: z.string().min(8).default('Admin1234!'),
+  // Intentionally no default: a password baked into source ships to everyone who
+  // can read the repo. It is only needed when the first admin is created (seed),
+  // which enforces its own strength requirement and fails fast when it is unset.
+  ADMIN_PASSWORD: z.preprocess(
+    (v) => (v === '' ? undefined : v),
+    z.string().min(8).optional(),
+  ),
   SEED_ON_START: boolFromString,
 
   NEXTAUTH_URL: z.string().optional(),

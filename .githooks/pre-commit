@@ -1,0 +1,17 @@
+#!/bin/sh
+# Pre-commit gate: blocks commits that introduce credentials.
+# Thin shim — all logic lives in scripts/security.mjs (the single entry point).
+# Activate once per clone:  git config core.hooksPath .githooks
+# Bypass deliberately:      git commit --no-verify
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: node not found, skipping the security checks"
+  exit 0
+fi
+
+if ! node scripts/security.mjs --staged; then
+  echo ""
+  echo "pre-commit: commit blocked (possible secret in the staged changes)."
+  echo "pre-commit: move the value to .env, or bypass once with 'git commit --no-verify'."
+  exit 1
+fi

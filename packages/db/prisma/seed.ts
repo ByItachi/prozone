@@ -194,30 +194,47 @@ async function seed() {
     });
   }
 
-  const passwordHash = await argon2.hash('Admin1234!');
-
   const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@prozone.st';
-  const admin = await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: {},
-    create: {
-      name: 'System',
-      surname: 'Admin',
-      username: 'admin',
-      email: adminEmail,
-      emailVerified: true,
-      passwordHash,
-      roleId: ROLE_IDS.SUPER_ADMIN,
-      status: 'ACTIVE',
-    },
-    include: { wallet: true },
-  });
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
 
-  await prisma.wallet.upsert({
-    where: { userId: admin.id },
-    update: { currency: 'USD' },
-    create: { userId: admin.id, balance: 0, currency: 'USD' },
-  });
+  if (existingAdmin) {
+    // Never rewrite an existing admin's credentials: re-seeding must not reset
+    // a password that was already rotated.
+    log.info(`Admin ${adminEmail} already exists, leaving credentials untouched.`);
+    await prisma.wallet.upsert({
+      where: { userId: existingAdmin.id },
+      update: { currency: 'USD' },
+      create: { userId: existingAdmin.id, balance: 0, currency: 'USD' },
+    });
+  } else {
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword || adminPassword.length < 12) {
+      throw new Error(
+        'ADMIN_PASSWORD must be set (at least 12 characters) to create the initial admin account. ' +
+          'There is deliberately no default in the repository — set it in .env before seeding.',
+      );
+    }
+
+    const admin = await prisma.user.create({
+      data: {
+        name: 'System',
+        surname: 'Admin',
+        username: 'admin',
+        email: adminEmail,
+        emailVerified: true,
+        passwordHash: await argon2.hash(adminPassword),
+        roleId: ROLE_IDS.SUPER_ADMIN,
+        status: 'ACTIVE',
+      },
+      include: { wallet: true },
+    });
+
+    await prisma.wallet.upsert({
+      where: { userId: admin.id },
+      update: { currency: 'USD' },
+      create: { userId: admin.id, balance: 0, currency: 'USD' },
+    });
+  }
 
   for (const p of PRODUCTS) {
     const { monthlyPrice, yearlyPrice, ...rest } = p;
